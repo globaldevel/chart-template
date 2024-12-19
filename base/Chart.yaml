@@ -1,0 +1,12 @@
+apiVersion: v2
+name: base-app
+description: Template for base-app applications
+version: 1.0.1
+keywords:
+  - cloud
+  - application
+  - base-chart
+maintainers:
+  - name: Devops
+    email: devops@globaldevel.com
+#icon: https://www.tbd.com/tbd.png

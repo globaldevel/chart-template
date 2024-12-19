@@ -1,0 +1,86 @@
+{{- if and .Values.release.deploy .Values.redis.enabled -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-{{ .Values.namespace }}-{{ .Values.appName }}
+  namespace: caching
+spec:
+  selector:
+    app: redis-{{ .Values.namespace }}-{{ .Values.appName }}
+  ports:
+    - name: service-port
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-{{ .Values.namespace }}-{{ .Values.appName }}
+  namespace: caching
+  labels:
+    app: redis-{{ .Values.namespace }}-{{ .Values.appName }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: redis-{{ .Values.namespace }}-{{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: redis-{{ .Values.namespace }}-{{ .Values.appName }}
+    spec:
+      containers:
+      - name: redis-{{ .Values.namespace }}-{{ .Values.appName }}
+        image: {{ .Values.redis.image }}
+        command:
+          - redis-server
+          - "/usr/local/etc/redis/redis.conf"
+        args:
+          - --requirepass
+          - $(REDIS_PASSWORD)
+        ports:
+        - containerPort: 6379
+        envFrom:
+        - secretRef:
+            name: redis-secret
+            optional: true
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+        resources:
+          limits:
+            cpu: {{ if eq .Values.redis.resources "low" }}25m{{ else }}50m{{ end }}
+            memory: {{ if eq .Values.redis.resources "low" }}128Mi{{ else }}256Mi{{ end }}
+          requests:
+            cpu: {{ if eq .Values.redis.resources "low" }}10m{{ else }}25m{{ end }}
+            memory: {{ if eq .Values.redis.resources "low" }}64Mi{{ else }}128Mi{{ end }}
+        volumeMounts:
+        - mountPath: /usr/local/etc/redis
+          name: {{ .Values.redis.config }}
+      volumes:
+        - name: {{ .Values.redis.config }}
+          configMap:
+            name: {{ .Values.redis.config }}
+            items:
+            - key: redis-config
+              path: redis.conf
+
+---
+## secret se creara en cada entorno de la aplicacion ##
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-connstr-{{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+data:
+  Redis: {{ printf "%s-%s-redis.caching.svc.cluster.local:6379,password=0aee41fc-8ab6-4204-aa79-6b09391255c4,abortConnect=false" .Values.namespace .Values.appName | b64enc }}
+type: Opaque
+
+{{- end -}}

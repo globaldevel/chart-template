@@ -1,0 +1,6 @@
+Gracias por utilizar el template de GS.
+Estas usando el release para {{ .Values.appName }}.
+Para saber un poco mas del release, podes ejecutar:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}

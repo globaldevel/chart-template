@@ -1,0 +1,16 @@
+{{- if .Values.release.deploy -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.appName }}
+data:
+  {{- if or (eq .Values.release.language "nodeFE") (eq .Values.release.language "nodeBFF") }}
+  NODE_ENV: {{ .Values.namespace | quote }}
+  {{- end }}
+  {{- range $key, $val := .Values.variables }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end -}}

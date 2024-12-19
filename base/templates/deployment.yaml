@@ -1,0 +1,66 @@
+{{- if .Values.release.deploy -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/project: {{ .Values.release.project }}
+    app.kubernetes.io/deployed-at: 2024.12.05
+spec:
+  revisionHistoryLimit: {{ if eq .Values.namespace "production" }}1{{ else }}0{{ end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.appName }}
+        app.kubernetes.io/component: {{ .Values.release.architecture }}
+        app.kubernetes.io/owner: {{ .Values.release.squad }}
+      annotations:
+        configmap.reloader.stakater.com/reload: {{ .Values.configmap.name }}
+        secret.reloader.stakater.com/reload: {{ .Values.secret.name }}
+        app.kubernetes.io/name: {{ .Values.appName }}
+    spec:
+      containers:
+      - name: {{ .Values.appName }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.release.apiContainerPort }}
+        envFrom:
+          - secretRef:
+              name: {{ .Values.appName }}
+              optional: true
+          - secretRef:
+              name: redis-connstr-{{ .Values.appName }}
+              optional: true
+          - configMapRef:
+              name: {{ .Values.configmap.name }}
+              optional: true
+        {{ if .Values.healthchecks.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.healthchecks.livelinessPath }}
+            port: {{ .Values.release.apiContainerPort }}
+            scheme: HTTP
+          timeoutSeconds: 10
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.healthchecks.readinessPath }}
+            port: {{ .Values.release.apiContainerPort }}
+            scheme: HTTP
+          timeoutSeconds: 15
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          successThreshold: 1
+          failureThreshold: 3
+        {{ end }}
+        resources:
+          {{ include "resourceValues" .Values.release.apiTier | indent 12 }}
+{{- end -}}

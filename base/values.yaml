@@ -1,0 +1,54 @@
+appName: base-app
+namespace: default
+
+release:
+  deploy: false
+  apiTier: Tier1
+  language: ToBeDefine
+  squad: ToBeDefine
+  project: ToBeDefine
+  architecture: ToBeDefine
+  apiContainerPort: 80
+
+image:
+  repository: acrurl.azurecr.io/ToBeDefine
+  tag: latest
+  pullPolicy: Always
+
+# valores custom para el chart
+healthchecks:
+  enabled: true
+  readinessPath: /ToBeDefine/health
+  livelinessPath: /ToBeDefine/health
+
+ingress:
+  enabled: true
+
+configmap:
+  name: ToBeDefine
+
+secret:
+  name: ToBeDefine
+
+nodeSelector: {}
+#  key: value
+
+service:
+  apiServicePort: 80
+  serviceType: ClusterIP
+
+redis:
+  enabled: false
+  image: redis:8.0-M02-alpine3.20
+  config: redis-low-config
+  resources: low
+
+autoscaling:
+  averageCPU: 80
+  averageMEM: 80
+
+resources:
+  limitsCPU: 100m
+  limitsMEM: 128Mi
+  requestsCPU: 100m
+  requestsMEM: 128Mi

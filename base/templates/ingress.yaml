@@ -1,0 +1,30 @@
+{{- if and .Values.release.deploy .Values.ingress.enabled -}}
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  annotations:
+    appgw.ingress.kubernetes.io/backend-path-prefix: '/{{ .Values.appName }}/'
+    appgw.ingress.kubernetes.io/health-probe-path: '/{{ .Values.appName }}/health'
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"
+    appgw.ingress.kubernetes.io/use-private-ip: "true"
+    appgw.ingress.kubernetes.io/appgw-ssl-certificate: "svc-wildcard"
+    appgw.ingress.kubernetes.io/request-timeout: "300"
+    kubernetes.io/ingress.class: azure/application-gateway
+
+spec:
+  rules:
+  - host: {{ include "ingress.host" . }}
+    http:
+      paths:
+      - path: /{{ .Values.appName }}/*
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.appName }}
+            port:
+              number: 80
+
+{{- end -}}
