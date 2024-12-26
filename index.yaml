@@ -1,0 +1,19 @@
+apiVersion: v1
+entries:
+  base-app:
+  - apiVersion: v2
+    created: "2024-12-26T19:13:55.597296838-03:00"
+    description: Template for base-app applications
+    digest: 6297a63b2090e6a6e7bbfa01d74f6e233e036900bce393e1b63d1e040a6d38bc
+    keywords:
+    - cloud
+    - application
+    - base-chart
+    maintainers:
+    - email: devops@globaldevel.com
+      name: Devops
+    name: base-app
+    urls:
+    - http://https:/globaldevel.github.io/chart-template/base-app-1.0.1.tgz
+    version: 1.0.1
+generated: "2024-12-26T19:13:55.595616949-03:00"
